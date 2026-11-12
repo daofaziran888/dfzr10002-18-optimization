@@ -30,6 +30,32 @@ def list_entries(
     return PageResult(items=items, total=total, page=page, size=size)
 
 
+@router.get("/tasks")
+def export_tasks(
+    keyword: str | None = Query(default=None, description="按任务编号、面板编号或任务名称检索"),
+    version: str | None = Query(default=None, description="按快照面板版本过滤，如 DASH-0001@V1"),
+    page: int = 1,
+    size: int = 20,
+) -> dict[str, Any]:
+    """导出任务清单：导出快照与当前面板版本同步。"""
+    items, total = service.list_tasks(keyword=keyword, version=version, page=page, size=size)
+    return {"items": items, "total": total, "page": page, "size": size}
+
+
+@router.post("/tasks/sync")
+def sync_export_tasks() -> dict[str, Any]:
+    """按当前布局版本补齐/对齐导出任务快照。"""
+    tasks = service.sync_tasks()
+    return {"ok": True, "message": f"导出任务快照已对齐，共 {len(tasks)} 条", "items": tasks}
+
+
+@router.get("/export")
+def export_entries() -> dict[str, Any]:
+    """导出数据导出配置清单：返回当前过滤条件下的全量数据。"""
+    items, total = service.list_entries(page=1, size=10000)
+    return {"module": "export", "total": total, "items": items}
+
+
 @router.get("/{entry_id}", response_model=dict)
 def get_entry(entry_id: int) -> dict:
     """读取单条导出模板明细；不存在时给出可读的错误说明。"""
@@ -57,9 +83,3 @@ def run_action(entry_id: int, payload: EntryPayload) -> ActionResult:
         return ActionResult(ok=False, message=message)
     return ActionResult(ok=True, message=message, entry=entry)
 
-
-@router.get("/export")
-def export_entries() -> dict[str, Any]:
-    """导出数据导出配置清单：返回当前过滤条件下的全量数据。"""
-    items, total = service.list_entries(page=1, size=10000)
-    return {"module": "export", "total": total, "items": items}

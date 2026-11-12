@@ -40,6 +40,15 @@ class DashboardService:
         rows = store.rows(MODULE)
         entry = {"id": max((int(row.get("id", 0)) for row in rows), default=0) + 1}
         entry.update({field: values.get(field) for field in REQUIRED_FIELDS})
+        entry.setdefault("图表集合", values.get("图表集合") or "")
+        entry.setdefault("面板顺序", values.get("面板顺序") or "")
+        entry.setdefault("可见范围", values.get("可见范围") or "")
+        entry.setdefault("刷新频率", values.get("刷新频率") or "60分钟")
+        entry.setdefault("创建人", values.get("创建人") or "值班管理员")
+        entry.setdefault("是否展示", False)
+        entry["最近发布版本"] = ""
+        entry["版本状态"] = "草稿"
+        entry["布局修订号"] = 0
         entry["status"] = STATUS_ORDER[0]
         entry["pending"] = True
         entry["abnormal"] = False

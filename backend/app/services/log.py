@@ -1,4 +1,8 @@
-"""分析操作日志业务规则：状态流转、字段校验与筛选口径都收在这里。"""
+"""分析操作日志业务规则：状态流转、字段校验与筛选口径都收在这里。
+
+布局发布/回滚会往本模块写入审计台账行（台账类型=布局审计），
+每行带同一个关联版本编号，图表在台账里按版本留下条目。
+"""
 from __future__ import annotations
 
 from typing import Any
@@ -18,14 +22,24 @@ class LogService:
         *,
         keyword: str | None = None,
         status: str | None = None,
+        version: str | None = None,
+        ledger_type: str | None = None,
         page: int = 1,
         size: int = 20,
     ) -> tuple[list[dict[str, Any]], int]:
         rows = store.rows(MODULE)
         if keyword:
-            rows = [row for row in rows if keyword in str(row.get("日志编号", ""))]
+            rows = [
+                row
+                for row in rows
+                if keyword in str(row.get("日志编号", "")) or keyword in str(row.get("操作对象", ""))
+            ]
         if status:
             rows = [row for row in rows if row.get("status") == status]
+        if version:
+            rows = [row for row in rows if str(row.get("关联版本")) == version]
+        if ledger_type:
+            rows = [row for row in rows if str(row.get("台账类型")) == ledger_type]
         total = len(rows)
         start = max(page - 1, 0) * size
         return rows[start:start + size], total

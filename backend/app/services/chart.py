@@ -1,6 +1,11 @@
-"""可视化图表配置业务规则：状态流转、字段校验与筛选口径都收在这里。"""
+"""可视化图表配置业务规则：状态流转、字段校验与筛选口径都收在这里。
+
+图表行上的 ``版本标记`` 由看板布局发布/回滚写入，指向最近一次影响它的布局版本；
+``最近刷新版本`` 记录图表实际重算时对应的版本，两者不一致即表示图表待刷新。
+"""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from app.store import store
@@ -59,3 +64,19 @@ class ChartService:
         entry["pending"] = target != STATUS_ORDER[-1]
         entry["abnormal"] = action in NEGATIVE_ACTIONS
         return entry, f"图表配置已{action}"
+
+    def update_config(self, entry_id: int, values: dict[str, Any]) -> tuple[dict[str, Any] | None, str]:
+        """手工调整图表配置（如筛选条件）；记录调整时间，回滚时用来判断是否保留后续改动。"""
+        entry = store.find(MODULE, entry_id)
+        if entry is None:
+            return None, f"图表配置 {entry_id} 不存在或已归档"
+        editable = ["图表名称", "图表类型", "数据源绑定", "横轴字段", "纵轴字段", "筛选条件", "刷新间隔"]
+        changed: list[str] = []
+        for field in editable:
+            if field in values and values[field] is not None:
+                entry[field] = values[field]
+                changed.append(field)
+        if not changed:
+            return None, "没有提供可调整的图表配置字段"
+        entry["手工调整时间"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        return entry, f"图表配置已更新：{'、'.join(changed)}"

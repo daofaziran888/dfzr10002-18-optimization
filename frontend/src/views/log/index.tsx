@@ -7,11 +7,11 @@ const columns = [
   "日志编号",
   "操作类型",
   "操作对象",
-  "操作人",
-  "操作时间",
-  "查询耗时",
-  "返回行数",
-  "日志备注"
+  "关联版本",
+  "图表编号",
+  "台账类型",
+  "事件类型",
+  "复核状态"
 ]
 const actions = [
   "标记复核",
@@ -44,11 +44,15 @@ export default function LogView() {
   const [total, setTotal] = useState(0)
   const [errorMessage, setErrorMessage] = useState('')
   const [filters, setFilters] = useState<Record<string, string>>({})
+  const [versionFilter, setVersionFilter] = useState('')
   const filterFields = useMemo(() => columns.slice(0, 3), [])
 
   const reload = useCallback(async () => {
     setErrorMessage('')
-    const query = new URLSearchParams(filters).toString()
+    const query = new URLSearchParams({
+      ...filters,
+      ...(versionFilter ? { version: versionFilter, ledger_type: '布局审计' } : {}),
+    }).toString()
     try {
       const response = await request(`${ENDPOINT}?${query}`)
       if (!response.ok) {
@@ -60,7 +64,7 @@ export default function LogView() {
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '分析操作日志列表读取失败')
     }
-  }, [filters])
+  }, [filters, versionFilter])
 
   useEffect(() => {
     void reload()
@@ -87,7 +91,7 @@ export default function LogView() {
       <header className="page-head">
         <div>
           <h2>分析操作日志管理</h2>
-          <p className="page-desc">维护分析操作的全量日志记录，支持性能分析与合规审计。</p>
+          <p className="page-desc">维护分析操作的全量日志记录；看板布局发布/回滚会在此留下带版本编号的审计台账条目。</p>
         </div>
         <div className="page-actions">
           <button className="btn primary" type="button" onClick={() => setErrorMessage('操作日志登记入口尚未接入审批流')}>
@@ -119,8 +123,16 @@ export default function LogView() {
             />
           </label>
         ))}
+        <label className="filter-item">
+          <span>关联布局版本</span>
+          <input
+            value={versionFilter}
+            placeholder="如 DASH-0001@V2"
+            onChange={(event) => setVersionFilter(event.target.value)}
+          />
+        </label>
         <button className="btn" type="submit">查询</button>
-        <button className="btn ghost" type="button" onClick={() => setFilters({})}>重置条件</button>
+        <button className="btn ghost" type="button" onClick={() => { setFilters({}); setVersionFilter('') }}>重置条件</button>
       </form>
 
       <table className="data-table">

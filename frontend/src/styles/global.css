@@ -33,3 +33,21 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .link { border: none; background: none; color: var(--brand); cursor: pointer; padding: 0; }
 .page-foot { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--muted); }
 .error-text { color: #b42318; }
+
+/* 布局版本与台账相关面板 */
+.layout-panel { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-top: 14px; }
+.layout-panel h3 { font-size: 15px; margin: 0 0 8px; }
+.layout-panel h4 { font-size: 13px; margin: 0 0 6px; color: var(--muted); }
+.layout-head { display: flex; justify-content: space-between; align-items: center; }
+.layout-draft { border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 10px; display: grid; gap: 8px; }
+.chart-picks { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+.chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; background: #f8fafc; font-size: 12px; color: #1f2937; }
+.conflict-panel { background: #fef3f2; border: 1px solid #fda29b; border-radius: 8px; padding: 12px 14px; margin-top: 14px; }
+.conflict-panel h3 { font-size: 15px; margin: 0 0 6px; color: #b42318; }
+.conflict-panel ul { margin: 0; padding-left: 18px; font-size: 13px; }
+.trace-grid { display: flex; gap: 12px; margin: 10px 0; }
+.trace-grid > article { flex: 1; }
+.trace-list { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.8; }
+.badge { display: inline-block; margin-left: 6px; background: var(--brand); color: #fff; border-radius: 999px; padding: 0 8px; font-size: 11px; }
+.notice-text { color: #067647; font-size: 13px; }
+.snapshot-cell { font-size: 12px; color: var(--muted); }

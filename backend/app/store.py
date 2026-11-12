@@ -21,6 +21,19 @@ class Store:
     def rows(self, module: str) -> list[dict[str, Any]]:
         return self._tables.setdefault(module, [])
 
+    def snapshot(self, modules: list[str]) -> dict[str, list[dict[str, Any]]]:
+        """给多个业务表做一份深拷贝，用于事务失败时还原。"""
+        import copy
+
+        return {name: copy.deepcopy(self.rows(name)) for name in modules}
+
+    def restore(self, snapshot: dict[str, list[dict[str, Any]]]) -> None:
+        """把快照写回业务表；只替换内容，不改变外部持有的列表引用。"""
+        import copy
+
+        for name, rows in snapshot.items():
+            self._tables[name][:] = copy.deepcopy(rows)
+
     def find(self, module: str, entry_id: int) -> dict[str, Any] | None:
         for row in self.rows(module):
             if int(row.get("id", 0)) == entry_id:

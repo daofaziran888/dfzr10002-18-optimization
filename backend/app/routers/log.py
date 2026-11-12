@@ -16,18 +16,29 @@ LIST_FIELDS = ["日志编号", "操作类型", "操作对象", "操作人", "操
 STATUSES = ["已记录", "已复核", "已归档"]
 
 
+
 @router.get("", response_model=PageResult[dict])
 def list_entries(
-    keyword: str | None = Query(default=None, description="按日志编号检索"),
+    keyword: str | None = Query(default=None, description="按日志编号或操作对象检索"),
     status: str | None = Query(default=None, description="已记录、已复核、已归档"),
+    version: str | None = Query(default=None, description="按关联布局版本过滤，如 DASH-0001@V1"),
+    ledger_type: str | None = Query(default=None, description="台账类型，布局审计为『布局审计』"),
     page: int = 1,
     size: int = 20,
 ) -> PageResult[dict]:
-    """按日志编号与状态过滤分析操作日志列表；没有数据时返回空页，不报错。"""
+    """按日志编号、状态、台账版本过滤分析操作日志列表；没有数据时返回空页，不报错。"""
     if size > 200:
         raise HTTPException(status_code=400, detail="每页最多 200 条，请缩小分页范围")
-    items, total = service.list_entries(keyword=keyword, status=status, page=page, size=size)
+    items, total = service.list_entries(
+        keyword=keyword, status=status, version=version, ledger_type=ledger_type, page=page, size=size
+    )
     return PageResult(items=items, total=total, page=page, size=size)
+
+@router.get("/export")
+def export_entries() -> dict[str, Any]:
+    """导出分析操作日志清单：返回当前过滤条件下的全量数据。"""
+    items, total = service.list_entries(page=1, size=10000)
+    return {"module": "log", "total": total, "items": items}
 
 
 @router.get("/{entry_id}", response_model=dict)
@@ -56,10 +67,3 @@ def run_action(entry_id: int, payload: EntryPayload) -> ActionResult:
     if entry is None:
         return ActionResult(ok=False, message=message)
     return ActionResult(ok=True, message=message, entry=entry)
-
-
-@router.get("/export")
-def export_entries() -> dict[str, Any]:
-    """导出分析操作日志清单：返回当前过滤条件下的全量数据。"""
-    items, total = service.list_entries(page=1, size=10000)
-    return {"module": "log", "total": total, "items": items}

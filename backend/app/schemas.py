@@ -28,6 +28,39 @@ class EntryPayload(BaseModel):
     remark: str | None = None
 
 
+class LayoutBatchItem(BaseModel):
+    """一次整组发布里的单个面板条目。"""
+
+    dashboard_id: int
+    charts: list[int | str] = Field(default_factory=list)
+    chart_ids: list[int | str] | None = None
+    layout: str | None = None
+    panel_order: list[int | str] | None = None
+    visible_teams: list[str] | None = None
+    expected_revision: int | None = None
+    name: str | None = None
+
+
+class LayoutPublishPayload(BaseModel):
+    """整组发布请求：一次提交多个面板，要么整组成功，要么整组不做修改。"""
+
+    items: list[LayoutBatchItem] = Field(default_factory=list)
+    operator: str = "值班管理员"
+    remark: str | None = None
+
+
+class LayoutRollbackPayload(BaseModel):
+    """回滚请求：指定布局版本；scope 为 layout 时只恢复布局相关字段，charts 时只恢复图表集合。"""
+
+    version_id: int | None = None
+    dashboard_id: int | None = None
+    target_version: str | None = None
+    scope: str = "layout"
+    operator: str = "值班管理员"
+    dry_run: bool = False
+    expected_revision: int | None = None
+
+
 
 class IndicatorEntry(BaseModel):
     """业务指标明细结构。"""

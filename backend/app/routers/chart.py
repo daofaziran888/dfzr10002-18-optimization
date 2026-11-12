@@ -29,6 +29,12 @@ def list_entries(
     items, total = service.list_entries(keyword=keyword, status=status, page=page, size=size)
     return PageResult(items=items, total=total, page=page, size=size)
 
+@router.get("/export")
+def export_entries() -> dict[str, Any]:
+    """导出可视化图表配置清单：返回当前过滤条件下的全量数据。"""
+    items, total = service.list_entries(page=1, size=10000)
+    return {"module": "chart", "total": total, "items": items}
+
 
 @router.get("/{entry_id}", response_model=dict)
 def get_entry(entry_id: int) -> dict:
@@ -48,6 +54,15 @@ def create_entry(payload: EntryPayload) -> ActionResult:
     return ActionResult(ok=True, message="图表配置已登记", entry=entry)
 
 
+@router.post("/{entry_id}/config", response_model=ActionResult)
+def update_config(entry_id: int, payload: EntryPayload) -> ActionResult:
+    """手工调整图表配置；版本标记不变，刷新状态会因此变成待刷新。"""
+    entry, message = service.update_config(entry_id, payload.values)
+    if entry is None:
+        return ActionResult(ok=False, message=message)
+    return ActionResult(ok=True, message=message, entry=entry)
+
+
 @router.post("/{entry_id}/actions", response_model=ActionResult)
 def run_action(entry_id: int, payload: EntryPayload) -> ActionResult:
     """对单条图表配置执行提交校验、启用配置、停用配置；不允许的动作会被拦下并说明原因。"""
@@ -56,10 +71,3 @@ def run_action(entry_id: int, payload: EntryPayload) -> ActionResult:
     if entry is None:
         return ActionResult(ok=False, message=message)
     return ActionResult(ok=True, message=message, entry=entry)
-
-
-@router.get("/export")
-def export_entries() -> dict[str, Any]:
-    """导出可视化图表配置清单：返回当前过滤条件下的全量数据。"""
-    items, total = service.list_entries(page=1, size=10000)
-    return {"module": "chart", "total": total, "items": items}
